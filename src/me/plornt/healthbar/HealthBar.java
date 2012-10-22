@@ -14,19 +14,21 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
 public class HealthBar extends JavaPlugin {
-    public static HashMap<Player, Integer> hn = new HashMap<Player, Integer>();
+    public static HashMap<Player, Integer> healthTracker = new HashMap<Player, Integer>();
     public static HealthBar plugin;
     public static Server server;
     public static boolean useHeroes = false;
-    private final HealthBarPlayerListener pl = new HealthBarPlayerListener(this);
-    private final HealthBarPluginListener pe = new HealthBarPluginListener(this);
+    private final HealthBarPlayerListener playerListener = new HealthBarPlayerListener(this);
+    private final HealthBarPluginListener pluginListener = new HealthBarPluginListener(this);
     public final Logger logger = Logger.getLogger("Minecraft");
 
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-        // will do something with later..
-        if (sender instanceof ConsoleCommandSender || sender.isOp() && !getBoolean("Permissions.usePermissions") || sender.hasPermission("healthbar.reload") && getBoolean("Permissions.usePermissions")) {
+        if (sender instanceof ConsoleCommandSender || sender.isOp() && !getBoolean("Permissions.usePermissions") || (sender.hasPermission("healthbar.reload") && getBoolean("Permissions.usePermissions"))) {
             if (commandLabel.equalsIgnoreCase("HealthBar") && args.length == 1 && args[0].equalsIgnoreCase("reload")) {
-                this.loadConfig();
+                this.reloadConfig();
+                for(Player player : getServer().getOnlinePlayers()) {
+                	setTitle(player);
+                }
                 sender.sendMessage("§c[HealthBar] §9Reloaded Configuration");
                 return true;
             }
@@ -34,39 +36,36 @@ public class HealthBar extends JavaPlugin {
         return false;
     }
 
-    public void setTitle(Player pl, int health, int tothealth, int death) {
-       //AppearanceManager sm = SpoutManager.getAppearanceManager();
-        if (health >= 0 && health <= tothealth) {
-            String bh;
-            String gh;
-            if (health > 0)
-                gh = new String(new char[health]).replace("\0", getString("Characters.barCharacter"));
-            else
-                gh = "";
-            if (health < tothealth)
-                bh = new String(new char[(tothealth - health)]).replace("\0", getString("Characters.barCharacter"));
-            else
-                bh = "";
-            String hb = "§e§c§e\n" + "§" + getString("Colors.containerColor") + getString("Characters.container1") + "§" + getString("Colors.goodHealthColor") + gh + "§" + getString("Colors.hurtHealthColor") + bh + "§" + getString("Colors.containerColor") + getString("Characters.container2");
-            if (getBoolean("Permissions.usePermissions")) {
-                for (Player player : getServer().getOnlinePlayers()) {
-                    if (player.hasPermission("healthbar.cansee")) {
-                        if (player instanceof SpoutPlayer) {
-                        	String[] plName = ((SpoutPlayer) pl).getTitle().split("§e§c§e");
-                           // String[] plName = sm.getTitle((SpoutPlayer) pl, (LivingEntity) player).split("§e§c§e");
-                            if (plName[0] != null) {
-                            	((SpoutPlayer) player).setTitleFor((SpoutPlayer) pl, plName[0] + hb);
-                                // sm.setPlayerTitle((SpoutPlayer) player, (LivingEntity) pl, plName[0] + hb);
-                            }
-                        }
-                    }
-                }
-            } else if (pl instanceof SpoutPlayer) {
-            	String[] plName = ((SpoutPlayer) pl).getTitle().split("§e§c§e");
-                // String[] plName = sm.getTitle((SpoutPlayer) pl, (LivingEntity) pl).split("§e§c§e");
-            	((SpoutPlayer) pl).setTitle(plName[0] + hb);
-               // sm.setGlobalTitle((LivingEntity) pl, plName[0] + hb);        
+    public void setTitle(Player pl) {
+    	int health = pl.getHealth();
+    	int maxHealth = 20;
+    	if (HealthBar.useHeroes != false) {
+    		maxHealth = (int) HealthBarHeroes.characterManager.getHero(pl).getMaxHealth();
+    	}
+        if (health >= 0 && health <= maxHealth) {
+            String badHealth = "";
+            String goodHealth = "";
+            if (health > 0) {
+                goodHealth = new String(new char[(int) (health * getDouble("Scale.barScale"))]).replace("\0", getString("Characters.barCharacter"));
             }
+            if (health < maxHealth) {
+                badHealth = new String(new char[(int) ((maxHealth - health) * getDouble("Scale.barScale"))]).replace("\0", getString("Characters.barCharacter"));
+            }
+            String playerHealthBar = "§e§c§e\n" + "§" + getString("Colors.containerColor") + getString("Characters.startCharacter") + "§" + getString("Colors.goodHealthColor") + goodHealth + "§" + getString("Colors.hurtHealthColor") + badHealth + "§" + getString("Colors.containerColor") + getString("Characters.endCharacter");
+        	if(pl instanceof SpoutPlayer) {
+	            if(((SpoutPlayer) pl).getTitle().split("§e§c§e")[0] != null) {
+		            playerHealthBar = ((SpoutPlayer) pl).getTitle().split("§e§c§e")[0] + playerHealthBar;
+		            if (getBoolean("Permissions.usePermissions")) {
+		                for (Player player : getServer().getOnlinePlayers()) {
+		                    if (player.hasPermission("healthbar.cansee") && player instanceof SpoutPlayer) {
+		                        ((SpoutPlayer) player).setTitleFor((SpoutPlayer) pl, playerHealthBar);
+		                    }
+		                }
+		            } else {
+		            	((SpoutPlayer) pl).setTitle(playerHealthBar);
+		            }
+	            }
+        	}
         }
     }
     
@@ -78,44 +77,44 @@ public class HealthBar extends JavaPlugin {
     	return getConfig().getBoolean(key, false);
     }
     
+    public double getDouble(String key) {
+    	return getConfig().getDouble(key);
+    }
+    
     @Override
     public void onDisable() {
         this.logger.info("[HealthBar] Shutting Down");
     }
 
     public void loadConfig() {
-        getConfig().addDefault("Colors.goodHealthColor",			"a");
-    	getConfig().addDefault("Colors.hurtHealthColor",			"c");
-    	getConfig().addDefault("Colors.containerColor",			"9");
-    	getConfig().addDefault("Characters.container1",			"[");
-    	getConfig().addDefault("Characters.container2",			"]");
-    	getConfig().addDefault("Characters.barCharacter",		"|");
-    	getConfig().addDefault("Permissions.usePermissions",		false);
+        getConfig().addDefault("Colors.goodHealthColor","a");
+    	getConfig().addDefault("Colors.hurtHealthColor","c");
+    	getConfig().addDefault("Colors.containerColor","9");
+    	getConfig().addDefault("Characters.startCharacter","[");
+    	getConfig().addDefault("Characters.endCharacter","]");
+    	getConfig().addDefault("Characters.barCharacter","|");
+    	getConfig().addDefault("Scale.barScale",1);
+    	getConfig().addDefault("Permissions.usePermissions",false);
     	getConfig().options().copyDefaults(true);
     	saveConfig();
     }
 
-    // Not sure if its possible but if heroes loads before my plugin is loaded
-    // im fairly sure the on plugin enable wont go...
     public void checkHeroes() {
-        // testing for Heroes without importing it! :D
-        Plugin pla = HealthBar.plugin.getServer().getPluginManager().getPlugin("Heroes");
-        if (pla != null) {
+        Plugin plugin = this.getServer().getPluginManager().getPlugin("Heroes");
+        if (plugin != null) {
             useHeroes = true;
-            new HealthBarHeroes(pla);
+            new HealthBarHeroes(plugin);
         }
     }
 
     @Override
     public void onEnable() {
-
-        this.logger.info("[HealthBar] Loading..");
         server = getServer();
         loadConfig();
-        PluginManager pm = server.getPluginManager();
-        pm.registerEvents(this.pl, this);
-        pm.registerEvents(this.pe, this);
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, new HealthBarEntityListener(this), 0, 1);
-        this.logger.info("[HealthBar] Loaded up plugin... Version 0.8.");
+        PluginManager pluginManager = server.getPluginManager();
+        pluginManager.registerEvents(this.playerListener, this);
+        pluginManager.registerEvents(this.pluginListener, this);
+        checkHeroes();
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, new HealthBarHealthListener(this), 0, 1);
     }
 }

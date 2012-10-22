@@ -16,22 +16,22 @@ public class HealthBarPlayerListener implements Listener {
 
     }
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerJoin(PlayerJoinEvent ev) {
-        Player pl = ev.getPlayer();
-        int h = pl.getHealth();
-        plugin.setTitle(pl, h, 20, 0);
-        System.out.println("playaaaaaajoin");
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        plugin.setTitle(player);
     }
     
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerRespawn(PlayerRespawnEvent ev) {
-        plugin.setTitle(ev.getPlayer(), 20, 20, 1);
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        plugin.setTitle(event.getPlayer());
     }
     
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerQuit(PlayerQuitEvent ev) {
-        if (!HealthBar.hn.isEmpty())
-            if (HealthBar.hn.containsKey(ev.getPlayer()))
-                HealthBar.hn.remove(ev.getPlayer());
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (!HealthBar.healthTracker.isEmpty()) {
+            if (HealthBar.healthTracker.containsKey(event.getPlayer())) {
+                HealthBar.healthTracker.remove(event.getPlayer());
+            }
+        }
     }
 }

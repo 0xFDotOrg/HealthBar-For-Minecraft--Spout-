@@ -1,28 +1,31 @@
 package me.plornt.healthbar;
 
+import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
 
 public class HealthBarPluginListener implements Listener {
-    private HealthBar pl;
+    private HealthBar plugin;
 
     public HealthBarPluginListener(HealthBar plugin) {
-        pl = plugin;
+        this.plugin = plugin;
     }
     
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onPluginEnable(PluginEnableEvent ev) {
-        // testing for Heroes without importing it! :D
-        Plugin pla = ev.getPlugin().getServer().getPluginManager().getPlugin("Heroes");
-        if (pla == ev.getPlugin()) {
-            pl.logger.info("[HealthBar] Found heroes - implementing health system.");
-            // Do nothing but you know, make the message sound like its actually
-            // doing someting other than:
-            new HealthBarHeroes(pla);
+    public void onPluginEnable(PluginEnableEvent event) {
+        if (event.getPlugin().getName().equals("Heroes")) {
+            this.plugin.logger.info("[HealthBar] Found heroes - using alternate health system.");
+            new HealthBarHeroes(event.getPlugin());
             HealthBar.useHeroes = true;
         }
+    }
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPluginEnable(PluginDisableEvent event) {
+    	if(event.getPlugin().getName().equals("Heroes")) {
+            this.plugin.logger.info("[HealthBar] Heroes unloaded - reverting to vanilla health system.");
+    		HealthBar.useHeroes = false;
+    	}
     }
 }

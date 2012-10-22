@@ -3,6 +3,8 @@ main: me.plornt.healthbar.HealthBar
 version: 0.8
 author: Plornt
 description: Adds a healthbar to SpoutClients.
+depend: [Spout]
+softdepend: [Heroes]
 commands:
   healthbar:
     description: Provides functions to reload the config.
