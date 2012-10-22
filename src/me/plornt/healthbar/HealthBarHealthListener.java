@@ -18,8 +18,8 @@ public class HealthBarHealthListener implements Runnable {
 					break;
             	}
             }
-			HealthBar.healthTracker.put(player, player.getHealth());
 			plugin.setTitle(player);
+			HealthBar.healthTracker.put(player, player.getHealth());
         }
     }
 }

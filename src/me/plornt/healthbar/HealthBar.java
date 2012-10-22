@@ -45,14 +45,24 @@ public class HealthBar extends JavaPlugin {
         if (health >= 0 && health <= maxHealth) {
             String badHealth = "";
             String goodHealth = "";
+            String lostHealth = "";
+        	int intLostHealth = 0;
+            if (!HealthBar.healthTracker.isEmpty() && HealthBar.healthTracker.containsKey(pl) && (HealthBar.healthTracker.get(pl) - pl.getHealth() > 0)) {
+            	intLostHealth = HealthBar.healthTracker.get(pl) - pl.getHealth();
+            }
+            if(intLostHealth > 0) {
+            	lostHealth = new String(new char[(int) (intLostHealth * getDouble("Scale.barScale"))]).replace("\0", getString("Characters.barCharacter"));
+            }
             if (health > 0) {
                 goodHealth = new String(new char[(int) (health * getDouble("Scale.barScale"))]).replace("\0", getString("Characters.barCharacter"));
             }
             if (health < maxHealth) {
-                badHealth = new String(new char[(int) ((maxHealth - health) * getDouble("Scale.barScale"))]).replace("\0", getString("Characters.barCharacter"));
+                badHealth = new String(new char[(int) ((maxHealth - health - intLostHealth) * getDouble("Scale.barScale"))]).replace("\0", getString("Characters.barCharacter"));
             }
             String playerHealthBar = "§e§c§e\n" + "§" + getString("Colors.containerColor") + getString("Characters.startCharacter")
-            		+ "§" + getString("Colors.goodHealthColor") + goodHealth + "§" + getString("Colors.hurtHealthColor") + badHealth 
+            		+ "§" + getString("Colors.goodHealthColor") + goodHealth 
+            		+ "§" + getString("Colors.lostHealthColor") + lostHealth 
+            		+ "§" + getString("Colors.hurtHealthColor") + badHealth 
             		+ "§" + getString("Colors.containerColor") + getString("Characters.endCharacter");
         	if(pl instanceof SpoutPlayer) {
 	            if(((SpoutPlayer) pl).getTitle().split("§e§c§e")[0] != null) {
@@ -92,6 +102,7 @@ public class HealthBar extends JavaPlugin {
         getConfig().addDefault("Colors.goodHealthColor","a");
     	getConfig().addDefault("Colors.hurtHealthColor","c");
     	getConfig().addDefault("Colors.containerColor","9");
+    	getConfig().addDefault("Colors.lostHealthColor", "6");
     	getConfig().addDefault("Characters.startCharacter","[");
     	getConfig().addDefault("Characters.endCharacter","]");
     	getConfig().addDefault("Characters.barCharacter","|");
