@@ -14,13 +14,12 @@ public class HealthBarHealthListener implements Runnable {
     public void run() {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             if (!HealthBar.healthTracker.isEmpty() && HealthBar.healthTracker.containsKey(player)) {
-				if (HealthBar.healthTracker.get(player) != player.getHealth()) {
-					plugin.setTitle(player);
+				if (HealthBar.healthTracker.get(player) == player.getHealth()) {
+					break;
             	}
-			} else {
-				HealthBar.healthTracker.put(player, player.getHealth());
-				plugin.setTitle(player);
-        	}
+            }
+			HealthBar.healthTracker.put(player, player.getHealth());
+			plugin.setTitle(player);
         }
     }
 }

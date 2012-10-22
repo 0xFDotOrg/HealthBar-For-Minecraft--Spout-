@@ -51,7 +51,9 @@ public class HealthBar extends JavaPlugin {
             if (health < maxHealth) {
                 badHealth = new String(new char[(int) ((maxHealth - health) * getDouble("Scale.barScale"))]).replace("\0", getString("Characters.barCharacter"));
             }
-            String playerHealthBar = "§e§c§e\n" + "§" + getString("Colors.containerColor") + getString("Characters.startCharacter") + "§" + getString("Colors.goodHealthColor") + goodHealth + "§" + getString("Colors.hurtHealthColor") + badHealth + "§" + getString("Colors.containerColor") + getString("Characters.endCharacter");
+            String playerHealthBar = "§e§c§e\n" + "§" + getString("Colors.containerColor") + getString("Characters.startCharacter")
+            		+ "§" + getString("Colors.goodHealthColor") + goodHealth + "§" + getString("Colors.hurtHealthColor") + badHealth 
+            		+ "§" + getString("Colors.containerColor") + getString("Characters.endCharacter");
         	if(pl instanceof SpoutPlayer) {
 	            if(((SpoutPlayer) pl).getTitle().split("§e§c§e")[0] != null) {
 		            playerHealthBar = ((SpoutPlayer) pl).getTitle().split("§e§c§e")[0] + playerHealthBar;

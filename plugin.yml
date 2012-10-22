@@ -1,7 +1,7 @@
 name: HealthBar
 main: me.plornt.healthbar.HealthBar
-version: 0.8
-author: Plornt
+version: 1.0
+author: Plornt & Necavi
 description: Adds a healthbar to SpoutClients.
 depend: [Spout]
 softdepend: [Heroes]
@@ -20,6 +20,6 @@ permissions:
         type: boolean
         default: false
       reload:
-        description: Whether or not they may reload the configuration
+        description: Whether or not a player may reload the configuration
         type: boolean
         default: false
