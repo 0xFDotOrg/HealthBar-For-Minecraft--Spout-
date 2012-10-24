@@ -1,4 +1,4 @@
-package me.plornt.healthbar;
+package org.necavi.minecraft.healthbar;
 
 import org.bukkit.entity.Player;
 
@@ -15,11 +15,10 @@ public class HealthBarHealthListener implements Runnable {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             if (!HealthBar.healthTracker.isEmpty() && HealthBar.healthTracker.containsKey(player)) {
 				if (HealthBar.healthTracker.get(player) == player.getHealth()) {
-					break;
+					continue;
             	}
-            }
+			}
 			plugin.setTitle(player);
-			HealthBar.healthTracker.put(player, player.getHealth());
         }
     }
 }
