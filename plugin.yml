@@ -1,8 +1,8 @@
 name: HealthBar
-main: me.plornt.healthbar.HealthBar
+main: org.necavi.minecraft.healthbar.HealthBar
 version: 1.0
 author: Plornt & Necavi
-description: Adds a healthbar to SpoutClients.
+description: Adds a healthbar for SpoutClients.
 depend: [Spout]
 softdepend: [Heroes]
 commands:
