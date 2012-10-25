@@ -46,7 +46,7 @@ public class HealthBar extends JavaPlugin {
     		health = pl.getHealth();
     		maxHealth = 20;
     	}
-        if (health >= 0 && health <= maxHealth) {
+        if (health > 0 && health <= maxHealth) {
             String hurtHealth = "";
             String goodHealth = "";
             String lostHealth = "";

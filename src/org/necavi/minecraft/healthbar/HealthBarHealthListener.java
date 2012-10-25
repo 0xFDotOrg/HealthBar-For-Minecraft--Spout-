@@ -14,7 +14,7 @@ public class HealthBarHealthListener implements Runnable {
     public void run() {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             if (!HealthBar.healthTracker.isEmpty() && HealthBar.healthTracker.containsKey(player)) {
-				if (HealthBar.healthTracker.get(player) == player.getHealth()) {
+				if (HealthBar.healthTracker.get(player) == (HealthBar.useHeroes ? HealthBarHeroes.characterManager.getHero(player).getHealth() : player.getHealth())) {
 					continue;
             	}
 			}
