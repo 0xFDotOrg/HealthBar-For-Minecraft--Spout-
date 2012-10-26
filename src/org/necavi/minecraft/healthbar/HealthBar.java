@@ -55,6 +55,15 @@ public class HealthBar extends JavaPlugin {
             if (!HealthBar.healthTracker.isEmpty() && HealthBar.healthTracker.containsKey(pl)) {
             	healthChange = HealthBar.healthTracker.get(pl) - health;
             }
+            titleBar = titleBar.replaceAll("\\{health_bar}", new String(new char[(int) ((health) * barScale) - ((healthChange < 0 && health != maxHealth && titleBar.contains("{gained_health_bar}")) ? healthChange * -1 : 0)]).replace("\0", barCharacter));
+            titleBar = titleBar.replaceAll("\\{max_health}", Integer.toString(maxHealth));
+            titleBar = titleBar.replaceAll("\\{health_percent}", Integer.toString((int)(((double)health/maxHealth)*100.0)));
+            titleBar = titleBar.replaceAll("\\{health}", Integer.toString(health));
+        	if (health < maxHealth) {
+            	titleBar = titleBar.replaceAll("\\{missing_health_bar}", new String(new char[(int) ((maxHealth - health - ((healthChange > 0 && titleBar.contains("{lost_health_bar}")) ? healthChange : 0)) * barScale)]).replace("\0", barCharacter));
+            } else {
+            	titleBar = titleBar.replaceAll("\\{missing_health_bar}", "");
+            }
         	if(healthChange > 0) {
             	titleBar = titleBar.replaceAll("\\{lost_health_bar}", new String(new char[(int) (healthChange * barScale)]).replace("\0", barCharacter));
         	} else {
@@ -76,19 +85,10 @@ public class HealthBar extends JavaPlugin {
             	titleBar = titleBar.replaceAll("\\{gained_health}", "0");
             }
         	if (health < maxHealth) {
-            	titleBar = titleBar.replaceAll("\\{missing_health_bar}", new String(new char[(int) ((maxHealth - health - (healthChange > 0 ? healthChange : 0)) * barScale)]).replace("\0", barCharacter));
-            } else {
-            	titleBar = titleBar.replaceAll("\\{missing_health_bar}", "");
-            }
-        	if (health < maxHealth) {
             	titleBar = titleBar.replaceAll("\\{missing_health}", Integer.toString(maxHealth - health));
             } else {
             	titleBar = titleBar.replaceAll("\\{missing_health}", "0");
             }
-            titleBar = titleBar.replaceAll("\\{max_health}", Integer.toString(maxHealth));
-            titleBar = titleBar.replaceAll("\\{health_percent}", Integer.toString((int)(((double)health/maxHealth)*100.0)));
-            titleBar = titleBar.replaceAll("\\{health_bar}", new String(new char[(int) ((health) * barScale) - ((healthChange < 0 && health != maxHealth) ? healthChange * -1 : 0)]).replace("\0", barCharacter));
-            titleBar = titleBar.replaceAll("\\{health}", Integer.toString(health));
         	if(pl instanceof SpoutPlayer) {
 	            if(((SpoutPlayer) pl).getTitle().split("§e§c§e")[0] != null) {
 		            titleBar = ((SpoutPlayer) pl).getTitle().split("§e§c§e")[0] + titleBar;
