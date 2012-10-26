@@ -8,7 +8,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 public class HealthBarPlayerListener implements Listener {
-    public static HealthBar plugin;
+    private static HealthBar plugin;
 
     public HealthBarPlayerListener(HealthBar instance) {
         plugin = instance;

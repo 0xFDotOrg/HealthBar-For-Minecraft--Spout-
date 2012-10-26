@@ -3,7 +3,7 @@ package org.necavi.minecraft.healthbar;
 import org.bukkit.entity.Player;
 
 public class HealthBarHealthListener implements Runnable {
-    public static HealthBar plugin;
+    private static HealthBar plugin;
 
     public HealthBarHealthListener(HealthBar instance) {
         plugin = instance;
