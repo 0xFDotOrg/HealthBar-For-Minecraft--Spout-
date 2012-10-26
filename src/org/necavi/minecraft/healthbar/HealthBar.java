@@ -3,6 +3,7 @@ package org.necavi.minecraft.healthbar;
 import java.util.HashMap;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.StringUtils;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -13,12 +14,15 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
+import com.herocraftonline.heroes.characters.Hero;
+
 public class HealthBar extends JavaPlugin {
     protected static HashMap<Player, Integer> healthTracker = new HashMap<Player, Integer>();
     private static Server server;
     protected static boolean useHeroes = false;
     private static String barFormat = "";
-    private static double barScale = 1.0;
+    private static double healthScale = 1.0;
+    private static double manaScale = 1.0;
 	private static String barCharacter;
     private final HealthBarPlayerListener playerListener = new HealthBarPlayerListener(this);
     private final HealthBarPluginListener pluginListener = new HealthBarPluginListener(this);
@@ -43,8 +47,9 @@ public class HealthBar extends JavaPlugin {
     	int health;
     	int maxHealth;
     	if (HealthBar.useHeroes) {
-    		maxHealth = HealthBarHeroes.characterManager.getHero(pl).getMaxHealth();
-    		health = HealthBarHeroes.characterManager.getHero(pl).getHealth();
+    		Hero hero = HealthBarHeroes.characterManager.getHero(pl);
+    		maxHealth = hero.getMaxHealth();
+    		health = hero.getHealth();
     	} else {
     		health = pl.getHealth();
     		maxHealth = 20;
@@ -55,17 +60,17 @@ public class HealthBar extends JavaPlugin {
             if (!HealthBar.healthTracker.isEmpty() && HealthBar.healthTracker.containsKey(pl)) {
             	healthChange = HealthBar.healthTracker.get(pl) - health;
             }
-            titleBar = titleBar.replaceAll("\\{health_bar}", new String(new char[(int) ((health) * barScale) - ((healthChange < 0 && health != maxHealth && titleBar.contains("{gained_health_bar}")) ? healthChange * -1 : 0)]).replace("\0", barCharacter));
+            titleBar = titleBar.replaceAll("\\{health_bar}", StringUtils.repeat(barCharacter, (int) ((health) * healthScale) - ((healthChange < 0 && health != maxHealth && titleBar.contains("{gained_health_bar}")) ? healthChange * -1 : 0)));
             titleBar = titleBar.replaceAll("\\{max_health}", Integer.toString(maxHealth));
             titleBar = titleBar.replaceAll("\\{health_percent}", Integer.toString((int)(((double)health/maxHealth)*100.0)));
             titleBar = titleBar.replaceAll("\\{health}", Integer.toString(health));
         	if (health < maxHealth) {
-            	titleBar = titleBar.replaceAll("\\{missing_health_bar}", new String(new char[(int) ((maxHealth - health - ((healthChange > 0 && titleBar.contains("{lost_health_bar}")) ? healthChange : 0)) * barScale)]).replace("\0", barCharacter));
+            	titleBar = titleBar.replaceAll("\\{missing_health_bar}", StringUtils.repeat(barCharacter, (int) ((maxHealth - health - ((healthChange > 0 && titleBar.contains("{lost_health_bar}")) ? healthChange : 0)) * healthScale)));
             } else {
             	titleBar = titleBar.replaceAll("\\{missing_health_bar}", "");
             }
         	if(healthChange > 0) {
-            	titleBar = titleBar.replaceAll("\\{lost_health_bar}", new String(new char[(int) (healthChange * barScale)]).replace("\0", barCharacter));
+            	titleBar = titleBar.replaceAll("\\{lost_health_bar}", StringUtils.repeat(barCharacter, (int) (healthChange * healthScale)));
         	} else {
         		titleBar = titleBar.replaceAll("\\{lost_health_bar}", "");
         	}
@@ -75,7 +80,7 @@ public class HealthBar extends JavaPlugin {
             	titleBar = titleBar.replaceAll("\\{lost_health}", "0");
             }
         	if(healthChange < 0 && health != maxHealth) {
-            	titleBar = titleBar.replaceAll("\\{gained_health_bar}", new String(new char[(int) (healthChange * barScale * -1)]).replace("\0", barCharacter));
+            	titleBar = titleBar.replaceAll("\\{gained_health_bar}", StringUtils.repeat(barCharacter, (int) (healthChange * healthScale * -1)));
             } else {
             	titleBar = titleBar.replaceAll("\\{gained_health_bar}", "");
             }
@@ -84,11 +89,21 @@ public class HealthBar extends JavaPlugin {
             } else {
             	titleBar = titleBar.replaceAll("\\{gained_health}", "0");
             }
-        	if (health < maxHealth) {
-            	titleBar = titleBar.replaceAll("\\{missing_health}", Integer.toString(maxHealth - health));
-            } else {
-            	titleBar = titleBar.replaceAll("\\{missing_health}", "0");
-            }
+            titleBar = titleBar.replaceAll("\\{missing_health}", Integer.toString(maxHealth - health));
+
+        	if(HealthBar.useHeroes) {
+        		Hero hero = HealthBarHeroes.characterManager.getHero(pl);
+        		titleBar = titleBar.replaceAll("\\{mana_bar}", StringUtils.repeat(barCharacter, (int) (hero.getMana() * manaScale)));	
+        		if(hero.getMaxMana() != hero.getMana()) {
+        			titleBar = titleBar.replaceAll("\\{missing_mana_bar}", StringUtils.repeat(barCharacter, (int) ((hero.getMaxMana() - hero.getMana()) * manaScale)));	
+        		} else {
+        			titleBar = titleBar.replaceAll("\\{missing_mana_bar}", "");
+        		}
+                titleBar = titleBar.replaceAll("\\{health_percent}", Integer.toString((int)(((double)hero.getMana()/hero.getMaxMana())*100.0)));
+	    		titleBar = titleBar.replaceAll("\\{missing_mana}", Integer.toString(hero.getMaxMana() - hero.getMana()));
+	    		titleBar = titleBar.replaceAll("\\{mana}", Integer.toString(hero.getMana()));
+	    		titleBar = titleBar.replaceAll("\\{max_mana}", Integer.toString(hero.getMaxMana()));
+        	}
         	if(pl instanceof SpoutPlayer) {
 	            if(((SpoutPlayer) pl).getTitle().split("§e§c§e")[0] != null) {
 		            titleBar = ((SpoutPlayer) pl).getTitle().split("§e§c§e")[0] + titleBar;
@@ -115,13 +130,15 @@ public class HealthBar extends JavaPlugin {
     public void parseConfig() {
     	barFormat = "§e§c§e\n" + getConfig().getString("bar.format").replaceAll("&&", "§");
 		barCharacter = getConfig().getString("bar.character");
-		barScale = getConfig().getDouble("bar.scale");
+		healthScale = getConfig().getDouble("bar.healthScale");
+		manaScale = getConfig().getDouble("bar.manaScale");
     }
     
     public void loadConfig() {
     	getConfig().addDefault("bar.character","|");
     	getConfig().addDefault("bar.format", "&&9[&&a{health_bar}&&b{gained_health_bar}&&6{lost_health_bar}&&c{missing_health_bar}&&9]");
-    	getConfig().addDefault("bar.scale",1.0);
+    	getConfig().addDefault("bar.healthScale",1.0);
+    	getConfig().addDefault("bar.manaScale",1.0);
     	getConfig().addDefault("system.usePermissions",false);
     	getConfig().options().copyDefaults(true);
     	saveConfig();
