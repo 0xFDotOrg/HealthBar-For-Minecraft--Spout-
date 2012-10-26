@@ -7,7 +7,8 @@ import com.herocraftonline.heroes.characters.CharacterManager;
 public class HealthBarHeroes {
     static CharacterManager characterManager;
 
-    HealthBarHeroes(Plugin heroes) {
+    HealthBarHeroes(Plugin heroes, HealthBar plugin) {
         characterManager = (CharacterManager) ((Heroes) heroes).getCharacterManager();
+        plugin.logger.info("[HealthBar] Found heroes - using alternate health system.");
     }
 }

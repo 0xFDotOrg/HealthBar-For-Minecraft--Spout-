@@ -1,6 +1,5 @@
 package org.necavi.minecraft.healthbar;
 
-import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -17,13 +16,13 @@ public class HealthBarPlayerListener implements Listener {
     }
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        plugin.setTitle(player);
+        plugin.setTitle(event.getPlayer());
     }
     
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         plugin.setTitle(event.getPlayer());
+        
     }
     
     @EventHandler(priority = EventPriority.MONITOR)
