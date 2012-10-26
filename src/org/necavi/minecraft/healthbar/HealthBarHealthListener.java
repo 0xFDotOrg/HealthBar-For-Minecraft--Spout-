@@ -18,7 +18,7 @@ public class HealthBarHealthListener implements Runnable {
 					continue;
             	}
 			}
-			plugin.setTitle(player);
+            plugin.setTitle(player);
         }
     }
 }

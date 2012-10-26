@@ -42,8 +42,8 @@ public class HealthBar extends JavaPlugin {
     public void setTitle(Player pl) {
     	int health;
     	int maxHealth;
-    	if (HealthBar.useHeroes != false) {
-    		maxHealth = (int) HealthBarHeroes.characterManager.getHero(pl).getMaxHealth();
+    	if (HealthBar.useHeroes) {
+    		maxHealth = HealthBarHeroes.characterManager.getHero(pl).getMaxHealth();
     		health = HealthBarHeroes.characterManager.getHero(pl).getHealth();
     	} else {
     		health = pl.getHealth();
