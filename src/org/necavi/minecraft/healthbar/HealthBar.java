@@ -99,7 +99,7 @@ public class HealthBar extends JavaPlugin {
         		} else {
         			titleBar = titleBar.replaceAll("\\{missing_mana_bar}", "");
         		}
-                titleBar = titleBar.replaceAll("\\{health_percent}", Integer.toString((int)(((double)hero.getMana()/hero.getMaxMana())*100.0)));
+                titleBar = titleBar.replaceAll("\\{mana_percent}", Integer.toString((int)(((double)hero.getMana()/hero.getMaxMana())*100.0)));
 	    		titleBar = titleBar.replaceAll("\\{missing_mana}", Integer.toString(hero.getMaxMana() - hero.getMana()));
 	    		titleBar = titleBar.replaceAll("\\{mana}", Integer.toString(hero.getMana()));
 	    		titleBar = titleBar.replaceAll("\\{max_mana}", Integer.toString(hero.getMaxMana()));
