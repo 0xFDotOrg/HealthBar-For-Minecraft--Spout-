@@ -1,6 +1,7 @@
 package org.necavi.minecraft.healthbar;
 
 import java.util.HashMap;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang.StringUtils;
@@ -45,7 +46,16 @@ public class HealthBar extends JavaPlugin {
         }
         return false;
     }
-
+    
+    public void delayedSetTitle(final SpoutPlayer player) {
+        getServer().getScheduler().scheduleSyncDelayedTask(this, new TimerTask() {
+            @Override
+            public void run() {
+                setTitle(player);
+            }
+        });
+    }
+    
     public void setTitle(SpoutPlayer pl) {
     	int health;
     	int maxHealth;

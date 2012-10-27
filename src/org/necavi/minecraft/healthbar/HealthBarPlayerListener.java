@@ -38,7 +38,7 @@ public class HealthBarPlayerListener implements Listener {
 	            }
         	}
     	} else {
-    		plugin.setTitle(pl);
+    		plugin.delayedSetTitle(pl);
     	}
     }
     
