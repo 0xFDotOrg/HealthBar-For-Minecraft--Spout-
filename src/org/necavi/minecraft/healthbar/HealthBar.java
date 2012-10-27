@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.getspout.spoutapi.SpoutManager;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
 import com.herocraftonline.heroes.characters.Hero;
@@ -20,6 +21,8 @@ public class HealthBar extends JavaPlugin {
     protected static HashMap<Player, Integer> healthTracker = new HashMap<Player, Integer>();
     private static Server server;
     protected static boolean useHeroes = false;
+    private static boolean hideDuringSneak = true;
+    protected static boolean usePermissions = false;
     private static String barFormat = "";
     private static double healthScale = 1.0;
     private static double manaScale = 1.0;
@@ -29,11 +32,11 @@ public class HealthBar extends JavaPlugin {
     protected final Logger logger = Logger.getLogger("Minecraft");
     
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-        if (sender instanceof ConsoleCommandSender || sender.isOp() || (sender.hasPermission("healthbar.reload") && getConfig().getBoolean("system.usePermissions"))) {
+        if (sender instanceof ConsoleCommandSender || sender.isOp() || sender.hasPermission("healthbar.reload")) {
             if (commandLabel.equalsIgnoreCase("HealthBar") && args.length == 1 && args[0].equalsIgnoreCase("reload")) {
                 this.reloadConfig();
                 this.parseConfig();
-                for(Player player : getServer().getOnlinePlayers()) {
+                for(SpoutPlayer player : SpoutManager.getOnlinePlayers()) {
                 	setTitle(player);
                 }
                 sender.sendMessage("§c[HealthBar] §9Reloaded Configuration");
@@ -43,7 +46,7 @@ public class HealthBar extends JavaPlugin {
         return false;
     }
 
-    public void setTitle(Player pl) {
+    public void setTitle(SpoutPlayer pl) {
     	int health;
     	int maxHealth;
     	if (HealthBar.useHeroes) {
@@ -52,7 +55,11 @@ public class HealthBar extends JavaPlugin {
     		health = hero.getHealth();
     	} else {
     		health = pl.getHealth();
-    		maxHealth = 20;
+    		maxHealth = pl.getMaxHealth();
+    	}
+    	if(hideDuringSneak && pl.isSneaking()) {
+			HealthBar.healthTracker.put(pl, health);
+			return;
     	}
         if (health > 0 && health <= maxHealth) {
         	String titleBar = barFormat;
@@ -104,18 +111,17 @@ public class HealthBar extends JavaPlugin {
 	    		titleBar = titleBar.replaceAll("\\{mana}", Integer.toString(hero.getMana()));
 	    		titleBar = titleBar.replaceAll("\\{max_mana}", Integer.toString(hero.getMaxMana()));
         	}
-        	if(pl instanceof SpoutPlayer) {
-	            if(((SpoutPlayer) pl).getTitle().split("§e§c§e")[0] != null) {
-		            titleBar = ((SpoutPlayer) pl).getTitle().split("§e§c§e")[0] + titleBar;
-		            if (getConfig().getBoolean("Permissions.usePermissions")) {
-		                for (Player player : getServer().getOnlinePlayers()) {
-		                    if (player.hasPermission("healthbar.cansee") && player instanceof SpoutPlayer) {
-		                        ((SpoutPlayer) player).setTitleFor((SpoutPlayer) pl, titleBar);
-		                    }
+        	String title = null;
+	        if((title = pl.getTitle().split("§e§c§e")[0]) != null) {
+		        titleBar = title + titleBar;
+		        if (usePermissions) {
+		            for (SpoutPlayer player : SpoutManager.getOnlinePlayers()) {
+		                if (player.hasPermission("healthbar.cansee")) {
+		                    player.setTitleFor(pl, titleBar);
 		                }
-		            } else {
-		            	((SpoutPlayer) pl).setTitle(titleBar);
 		            }
+		        } else {
+		        	pl.setTitle(titleBar);
 	            }
         	}
 			HealthBar.healthTracker.put(pl, health);
@@ -132,6 +138,8 @@ public class HealthBar extends JavaPlugin {
 		barCharacter = getConfig().getString("bar.character");
 		healthScale = getConfig().getDouble("bar.healthScale");
 		manaScale = getConfig().getDouble("bar.manaScale");
+		hideDuringSneak = getConfig().getBoolean("system.hideDuringSneak");
+		usePermissions = getConfig().getBoolean("system.usePermissions");
     }
     
     public void loadConfig() {
@@ -140,6 +148,7 @@ public class HealthBar extends JavaPlugin {
     	getConfig().addDefault("bar.healthScale",1.0);
     	getConfig().addDefault("bar.manaScale",1.0);
     	getConfig().addDefault("system.usePermissions",false);
+    	getConfig().addDefault("system.hideDuringSneak",true);
     	getConfig().options().copyDefaults(true);
     	saveConfig();
     	this.parseConfig();
