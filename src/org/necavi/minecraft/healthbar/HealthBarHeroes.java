@@ -9,6 +9,8 @@ public class HealthBarHeroes {
 
     HealthBarHeroes(Plugin heroes, HealthBar plugin) {
         characterManager = (CharacterManager) ((Heroes) heroes).getCharacterManager();
-        plugin.logger.info("[HealthBar] Found heroes - using alternate health system.");
+        plugin.logger.info("[HealthBar] Found heroes, using their health and mana systems.");
+        plugin.getServer().getScheduler()
+        	.scheduleSyncRepeatingTask(plugin, new HealthBarManaListener(plugin), 0, 1);
     }
 }

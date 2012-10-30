@@ -1,0 +1,45 @@
+bar:
+# Character used to make the healthbar
+  character: '|'
+  
+# Format used for the healthbar.
+# Note: Use the format &&<hex> for all color codes
+# Current variables (note: some, but not all, variables have bar forms):
+# {health},{health_bar} = the player's current health
+# {max_health} = the player's maximum health
+# {health_percent} = the player's current health percentage (without % sign)
+# {missing_health},{missing_health_bar} = the player's maxhealth - current health
+# {lost_health},{lost_health_bar} = the amount of health the player has lost since the last healthbar update
+# {gained_health},{gained_health_bar} = the amount of health the player has gained since the last healthbar update
+# {mana},{max_mana},{mana_percent},{missing_mana} {mana_bar},{missing_mana_bar} = same as their health-based cousins
+# {name} = Player's name
+# {relation_color} = adds a color code based on relations (requires system.setForEachPlayer for factions, but not for war)
+# {health_color} = adds a color code based on the player's health %
+  format: '&&9[&&a{health_bar}&&b{gained_health_bar}&&6{lost_health_bar}&&c{missing_health_bar}&&9]'
+  
+# Controls the size of the healthbar (values under 1.0 work somewhat currently, bars may be added/removed at different levels of health - will be fixed soon)
+  healthScale: 1.0
+
+# A value under 1.0 is recommended for mana - mana/maximum mana tends to be larger than health/maximum health
+  manaScale: 1.0
+
+colors:
+# Used for the {health_color} tag (health > 75 uses health75, etc)
+  health75: &&a
+  health50: &&2
+  health25: &&c
+  health0: &&0
+
+system:
+# Controls whether or not to have healthbars only show up for players with a certain permission
+  usePermissions: false
+  
+# Controls whether or not healthbars are hidden when a player sneaks (default shift)
+  hideDuringSneak: true
+  
+# Controls whether to set each player's healthbar to only one other person (takes more processing, but required for factions support)
+  setForEachPlayer: false
+    	
+# Override the entire title for use by the healthbar, allowing it to be colored (note: using the name parameter is VERY encouraged here.)
+  overrideName: false
+    	

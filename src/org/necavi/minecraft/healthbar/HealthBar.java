@@ -17,17 +17,28 @@ import org.getspout.spoutapi.SpoutManager;
 import org.getspout.spoutapi.player.SpoutPlayer;
 
 import com.herocraftonline.heroes.characters.Hero;
+import com.massivecraft.factions.FPlayer;
+import com.tommytony.war.Team;
 
 public class HealthBar extends JavaPlugin {
     protected static HashMap<Player, Integer> healthTracker = new HashMap<Player, Integer>();
+    protected static HashMap<Player, Integer> manaTracker = new HashMap<Player, Integer>();
     private static Server server;
     protected static boolean useHeroes = false;
+    protected static boolean useFactions = false;
+    protected static boolean useWar = false;
     private static boolean hideDuringSneak = true;
     protected static boolean usePermissions = false;
+    private static boolean overrideTitle = false;
+    private static boolean setForEachPlayer = false;
     private static String barFormat = "";
     private static double healthScale = 1.0;
     private static double manaScale = 1.0;
 	private static String barCharacter;
+	private static String health75 = "";
+	private static String health50 = "";
+	private static String health25 = "";
+	private static String health0 = "";
     private final HealthBarPlayerListener playerListener = new HealthBarPlayerListener(this);
     private final HealthBarPluginListener pluginListener = new HealthBarPluginListener(this);
     protected final Logger logger = Logger.getLogger("Minecraft");
@@ -74,12 +85,13 @@ public class HealthBar extends JavaPlugin {
         if (health > 0 && health <= maxHealth) {
         	String titleBar = barFormat;
         	int healthChange = 0;
+        	int healthPercent = (int)(((double)health/maxHealth)*100.0);
             if (!HealthBar.healthTracker.isEmpty() && HealthBar.healthTracker.containsKey(pl)) {
             	healthChange = HealthBar.healthTracker.get(pl) - health;
             }
-            titleBar = titleBar.replaceAll("\\{health_bar}", StringUtils.repeat(barCharacter, (int) ((health) * healthScale) - ((healthChange < 0 && health != maxHealth && titleBar.contains("{gained_health_bar}")) ? healthChange * -1 : 0)));
+            titleBar = titleBar.replaceAll("\\{health_bar}", StringUtils.repeat(barCharacter, (int) (health - ((healthChange < 0 && health != maxHealth && titleBar.contains("{gained_health_bar}")) ? healthChange * -1 : 0) * healthScale)));
             titleBar = titleBar.replaceAll("\\{max_health}", Integer.toString(maxHealth));
-            titleBar = titleBar.replaceAll("\\{health_percent}", Integer.toString((int)(((double)health/maxHealth)*100.0)));
+            titleBar = titleBar.replaceAll("\\{health_percent}", Integer.toString(healthPercent));
             titleBar = titleBar.replaceAll("\\{health}", Integer.toString(health));
         	if (health < maxHealth) {
             	titleBar = titleBar.replaceAll("\\{missing_health_bar}", StringUtils.repeat(barCharacter, (int) ((maxHealth - health - ((healthChange > 0 && titleBar.contains("{lost_health_bar}")) ? healthChange : 0)) * healthScale)));
@@ -107,34 +119,56 @@ public class HealthBar extends JavaPlugin {
             	titleBar = titleBar.replaceAll("\\{gained_health}", "0");
             }
             titleBar = titleBar.replaceAll("\\{missing_health}", Integer.toString(maxHealth - health));
-
+            String color = "";
+            if(healthPercent > 75) {
+            	color = health75;
+            } else if(healthPercent > 50) {
+            	color = health50;
+            } else if(healthPercent > 25) {
+            	color = health25;
+            } else {
+            	color = health0;
+            }
+            titleBar = titleBar.replaceAll("\\{health_color}", color);
+			HealthBar.healthTracker.put(pl, health);
         	if(HealthBar.useHeroes) {
         		Hero hero = HealthBarHeroes.characterManager.getHero(pl);
         		titleBar = titleBar.replaceAll("\\{mana_bar}", StringUtils.repeat(barCharacter, (int) (hero.getMana() * manaScale)));	
-        		if(hero.getMaxMana() != hero.getMana()) {
-        			titleBar = titleBar.replaceAll("\\{missing_mana_bar}", StringUtils.repeat(barCharacter, (int) ((hero.getMaxMana() - hero.getMana()) * manaScale)));	
+        		int mana = hero.getMana();
+        		int maxMana = hero.getMaxMana();
+        		if(maxMana != mana) {
+        			titleBar = titleBar.replaceAll("\\{missing_mana_bar}", StringUtils.repeat(barCharacter, (int) ((maxMana - mana) * manaScale)));	
         		} else {
         			titleBar = titleBar.replaceAll("\\{missing_mana_bar}", "");
         		}
-                titleBar = titleBar.replaceAll("\\{mana_percent}", Integer.toString((int)(((double)hero.getMana()/hero.getMaxMana())*100.0)));
-	    		titleBar = titleBar.replaceAll("\\{missing_mana}", Integer.toString(hero.getMaxMana() - hero.getMana()));
-	    		titleBar = titleBar.replaceAll("\\{mana}", Integer.toString(hero.getMana()));
-	    		titleBar = titleBar.replaceAll("\\{max_mana}", Integer.toString(hero.getMaxMana()));
+                titleBar = titleBar.replaceAll("\\{mana_percent}", Integer.toString((int)(((double)mana/maxMana)*100.0)));
+	    		titleBar = titleBar.replaceAll("\\{missing_mana}", Integer.toString(maxMana - mana));
+	    		titleBar = titleBar.replaceAll("\\{mana}", Integer.toString(mana));
+	    		titleBar = titleBar.replaceAll("\\{max_mana}", Integer.toString(maxMana));
+				HealthBar.manaTracker.put(pl, mana);
         	}
-        	String title = null;
-	        if((title = pl.getTitle().split("§e§c§e")[0]) != null) {
-		        titleBar = title + titleBar;
-		        if (usePermissions) {
-		            for (SpoutPlayer player : SpoutManager.getOnlinePlayers()) {
-		                if (player.hasPermission("healthbar.cansee")) {
-		                    player.setTitleFor(pl, titleBar);
+    		titleBar.replaceAll("\\{name}", pl.getDisplayName());
+        	if(!overrideTitle) {
+        		titleBar = pl.getTitle().split("§e§c§e")[0] + titleBar;
+        	}
+        	if(useWar) {
+        		titleBar.replaceAll("\\{relation_color}", Team.getTeamByPlayerName(pl.getName()).getKind().getColor().toString());
+        	}
+		    if (usePermissions || setForEachPlayer) {
+		    	String tempTitle;
+		        for (SpoutPlayer player : SpoutManager.getOnlinePlayers()) {
+		            if ((usePermissions && player.hasPermission("healthbar.cansee") || setForEachPlayer)) {
+		                if(useFactions) {
+		                	tempTitle = titleBar.replaceAll("\\{relation_color}", ((FPlayer) player).getColorTo((FPlayer) pl).toString());
+		                } else {
+		                	tempTitle = titleBar.replaceAll("\\{relation_color}", "");
 		                }
+		                player.setTitleFor(pl, tempTitle);
 		            }
-		        } else {
-		        	pl.setTitle(titleBar);
-	            }
-        	}
-			HealthBar.healthTracker.put(pl, health);
+		        }
+		    } else {
+		    	pl.setTitle(titleBar.replaceAll("\\{relation_color}", ""));
+	        }
         }
     }
     
@@ -150,6 +184,12 @@ public class HealthBar extends JavaPlugin {
 		manaScale = getConfig().getDouble("bar.manaScale");
 		hideDuringSneak = getConfig().getBoolean("system.hideDuringSneak");
 		usePermissions = getConfig().getBoolean("system.usePermissions");
+		setForEachPlayer = getConfig().getBoolean("system.setForEachPlayer");
+    	health75 = getConfig().getString("colors.health75").replaceAll("&&", "§");
+    	health50 = getConfig().getString("colors.health50").replaceAll("&&", "§");
+    	health25 = getConfig().getString("colors.health25").replaceAll("&&", "§");
+    	health0 = getConfig().getString("colors.health0").replaceAll("&&", "§");
+		overrideTitle = getConfig().getBoolean("system.overrideTitle");
     }
     
     public void loadConfig() {
@@ -157,21 +197,37 @@ public class HealthBar extends JavaPlugin {
     	getConfig().addDefault("bar.format", "&&9[&&a{health_bar}&&b{gained_health_bar}&&6{lost_health_bar}&&c{missing_health_bar}&&9]");
     	getConfig().addDefault("bar.healthScale",1.0);
     	getConfig().addDefault("bar.manaScale",1.0);
+    	getConfig().addDefault("colors.health75", "&&a");
+    	getConfig().addDefault("colors.health50", "&&2");
+    	getConfig().addDefault("colors.health25", "&&c");
+    	getConfig().addDefault("colors.health0", "&&0");
     	getConfig().addDefault("system.usePermissions",false);
     	getConfig().addDefault("system.hideDuringSneak",true);
+    	getConfig().addDefault("system.setForEachPlayer", false);
+    	getConfig().addDefault("system.overrideTitle", false);
     	getConfig().options().copyDefaults(true);
     	saveConfig();
     	this.parseConfig();
     }
 
-    public void checkHeroes() {
-        Plugin plugin = this.getServer().getPluginManager().getPlugin("Heroes");
+    public void checkPlugins() {
+    	PluginManager pluginManager = this.getServer().getPluginManager();
+        Plugin plugin = pluginManager.getPlugin("Heroes");
         if (plugin != null) {
             useHeroes = true;
             new HealthBarHeroes(plugin, this);
         }
+        plugin = pluginManager.getPlugin("Factions");
+        if (plugin != null) {
+            useFactions = true;
+            new HealthBarFactions(this);
+        }
+        plugin = pluginManager.getPlugin("War");
+        if (plugin != null) {
+            useWar = true;
+            new HealthBarWar(this);
+        }
     }
-
     @Override
     public void onEnable() {
         server = getServer();
@@ -179,7 +235,7 @@ public class HealthBar extends JavaPlugin {
         PluginManager pluginManager = server.getPluginManager();
         pluginManager.registerEvents(this.playerListener, this);
         pluginManager.registerEvents(this.pluginListener, this);
-        checkHeroes();
+        checkPlugins();
         server.getScheduler().scheduleSyncRepeatingTask(this, new HealthBarHealthListener(this), 0, 1);
     }
 }
